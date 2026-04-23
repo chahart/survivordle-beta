@@ -55,8 +55,8 @@ export function buildStintMap(contestants) {
   const stintMap = {};
   for (const id in grouped) {
     grouped[id].forEach((c, idx) => {
-      const labels = ["First Stint", "Second Stint", "Third Stint", "Fourth Stint"];
-      stintMap[c.id] = c.returnee ? (labels[idx] || `Stint ${idx + 1}`) : null;
+      const labels = ["First Appearance", "Second Appearance", "Third Appearance", "Fourth Appearance"];
+      stintMap[c.id] = c.returnee ? (labels[idx] || `Appearance ${idx + 1}`) : null;
     });
   }
   return stintMap;
