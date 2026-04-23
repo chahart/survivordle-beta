@@ -67,6 +67,9 @@ export default function NavBar({ lightMode, onToggleLight, colorblind, onToggleC
           <NavLink to="/unlimited" className={({ isActive }) => `nav-tab${isActive ? " active" : ""}`}>
             Unlimited
           </NavLink>
+          <NavLink to="/recall" className={({ isActive }) => `nav-tab${isActive ? " active" : ""}`}>
+            Recall
+          </NavLink>
         </div>
 
         {/* Desktop: secondary links */}

@@ -693,4 +693,147 @@ const FOOTER_CSS = `
   }
 `;
 
+export const RECALL_CSS = `
+  .recall-page { max-width: 640px; margin: 0 auto; }
+
+  /* Castaway name card */
+  .recall-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px 24px; text-align: center;
+    margin-bottom: 28px;
+  }
+  .recall-castaway-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text3); margin-bottom: 10px;
+  }
+  .recall-castaway-name {
+    font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px, 6vw, 42px);
+    letter-spacing: 2px; color: #e8742a; line-height: 1.1; margin-bottom: 10px;
+  }
+  .recall-castaway-sub {
+    font-size: 13px; color: var(--text3);
+  }
+
+  /* Form */
+  .recall-form { display: flex; flex-direction: column; gap: 20px; }
+  .recall-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .recall-field { display: flex; flex-direction: column; gap: 6px; }
+  .recall-field-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text3);
+  }
+  .recall-input {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px;
+    padding: 11px 14px; outline: none; transition: border-color 0.2s;
+    width: 100%;
+  }
+  .recall-input:focus { border-color: #e8742a; }
+  .recall-input::placeholder { color: var(--placeholder); }
+  /* hide number spinners */
+  .recall-input::-webkit-outer-spin-button,
+  .recall-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .recall-input[type=number] { -moz-appearance: textfield; }
+
+  .recall-select-wrap {
+    display: flex; align-items: center;
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 0 14px; transition: border-color 0.2s;
+  }
+  .recall-select-wrap:focus-within { border-color: #e8742a; }
+  .recall-select {
+    flex: 1; background: transparent; border: none;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px;
+    padding: 11px 0; outline: none; cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+  }
+  .recall-select option { background: var(--bg2); color: var(--text); }
+
+  .recall-error {
+    font-size: 13px; color: #e05040; text-align: center;
+  }
+
+  .recall-submit-btn {
+    background: linear-gradient(135deg, #e8742a, #b03020);
+    border: none; border-radius: 8px; color: #fff;
+    cursor: pointer; font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px; letter-spacing: 1.5px; padding: 13px 28px;
+    transition: opacity 0.2s; width: 100%;
+  }
+  .recall-submit-btn:hover { opacity: 0.88; }
+
+  /* Results */
+  .recall-results { display: flex; flex-direction: column; gap: 20px; }
+
+  .recall-score-banner {
+    display: flex; align-items: center; justify-content: center; gap: 20px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 22px 28px; text-align: center;
+  }
+  .recall-score-total {
+    font-family: 'Bebas Neue', sans-serif; font-size: 48px;
+    color: var(--text); letter-spacing: 2px; line-height: 1;
+  }
+  .recall-score-grade {
+    font-family: 'Bebas Neue', sans-serif; font-size: 64px;
+    letter-spacing: 2px; line-height: 1;
+  }
+
+  /* Breakdown rows */
+  .recall-breakdown { display: flex; flex-direction: column; gap: 6px; }
+
+  .recall-result-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 1fr auto;
+    gap: 8px; align-items: center;
+    border-radius: 8px; padding: 12px 14px;
+  }
+  .recall-result-row--correct { background: #1a4d1a; border: 1px solid #4aaa4a; color: #b0ffb0; }
+  .recall-result-row--close   { background: #4a2a05; border: 1px solid #f09030; color: #ffd080; }
+  .recall-result-row--wrong   { background: var(--cell-wrong-bg); border: 1px solid var(--cell-wrong-border); color: var(--cell-wrong-text); }
+
+  .recall-result-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    opacity: 0.85;
+  }
+  .recall-result-guess,
+  .recall-result-answer {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .recall-result-guess-label {
+    font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+    opacity: 0.6;
+  }
+  .recall-result-val { font-size: 14px; font-weight: 600; }
+
+  .recall-result-pts {
+    display: flex; align-items: baseline; gap: 2px; white-space: nowrap;
+    font-weight: 700;
+  }
+  .recall-result-pts-num  { font-size: 18px; }
+  .recall-result-pts-denom { font-size: 12px; opacity: 0.7; }
+
+  .recall-again-btn {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); cursor: pointer; font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600; padding: 12px 24px;
+    transition: all 0.2s; width: 100%;
+  }
+  .recall-again-btn:hover { border-color: #e8742a; color: #e8742a; }
+
+  @media (max-width: 500px) {
+    .recall-fields { grid-template-columns: 1fr; }
+    .recall-result-row {
+      grid-template-columns: 90px 1fr 1fr auto;
+      gap: 6px; padding: 10px 10px;
+    }
+    .recall-result-label { font-size: 10px; }
+    .recall-result-val   { font-size: 12px; }
+    .recall-result-pts-num { font-size: 15px; }
+    .recall-score-total { font-size: 38px; }
+    .recall-score-grade { font-size: 52px; }
+  }
+`;
+
 export { TAB_CSS, SUBTAB_CSS, PRIVACY_CSS, STATS_PAGE_CSS, ABOUT_CSS, FOOTER_CSS };
