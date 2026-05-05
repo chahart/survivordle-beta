@@ -3,7 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import CSS, { TAB_CSS, SUBTAB_CSS, PRIVACY_CSS, STATS_PAGE_CSS, ABOUT_CSS, FOOTER_CSS, RECALL_CSS } from "./shared/styles";
 import NavBar from "./components/NavBar";
 import Footer from "./components/Footer";
-import Ramp from "./components/Ramp.js";
+import Ramp from "./components/Ramp";
 import Daily from "./pages/Daily";
 import Archive from "./pages/Archive";
 import Unlimited from "./pages/Unlimited";
