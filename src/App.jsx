@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import CSS, { TAB_CSS, SUBTAB_CSS, PRIVACY_CSS, STATS_PAGE_CSS, ABOUT_CSS, FOOTER_CSS, RECALL_CSS } from "./shared/styles";
 import NavBar from "./components/NavBar";
 import Footer from "./components/Footer";
+import Ramp from "./components/Ramp.js";
 import Daily from "./pages/Daily";
 import Archive from "./pages/Archive";
 import Unlimited from "./pages/Unlimited";
@@ -14,6 +15,9 @@ import FAQ from "./pages/FAQ";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Recall from "./pages/Recall";
+
+const PUB_ID = import.meta.env.VITE_PLAYWIRE_PUB_ID;
+const WEBSITE_ID = import.meta.env.VITE_PLAYWIRE_WEBSITE_ID;
 
 export default function App() {
   const [contestants,  setContestants]  = useState([]);
@@ -42,6 +46,8 @@ export default function App() {
       <style>{TAB_CSS}{SUBTAB_CSS}{PRIVACY_CSS}{STATS_PAGE_CSS}{ABOUT_CSS}{FOOTER_CSS}{RECALL_CSS}</style>
       <style>{lightMode ? "body{background:#f5f0e8}" : "body{background:#0a0a0a}"}</style>
       <div className={lightMode ? "light" : ""}>
+
+        <Ramp PUB_ID={PUB_ID} WEBSITE_ID={WEBSITE_ID} />
 
         <NavBar
           lightMode={lightMode}
