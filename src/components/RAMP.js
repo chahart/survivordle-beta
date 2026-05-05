@@ -13,6 +13,7 @@ const Ramp = ({ PUB_ID, WEBSITE_ID }) => {
 
     if (!rampComponentLoaded) {
       setRampComponentLoaded(true);
+      
       window.ramp = window.ramp || {};
       window.ramp.que = window.ramp.que || [];
       window.ramp.passiveMode = true;
