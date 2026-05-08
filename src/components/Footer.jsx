@@ -43,7 +43,7 @@ export default function Footer() {
       <p style={{ textAlign: "center" }}>
         <a href="https://www.playwire.com/contact-direct-sales" rel="noopener" target="_blank">
           Advertise on this site.
-        </a></p>>
+        </a></p>
     </div>
   </div>
 </footer>

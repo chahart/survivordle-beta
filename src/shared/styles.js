@@ -645,8 +645,11 @@ const FOOTER_CSS = `
   .site-footer {
     border-top: 1px solid var(--nav-border);
     background: var(--nav-bg);
-    padding: 20px 16px;
+    padding: 20px 16px 70px;
     margin-top: 40px;
+  }
+  @media (max-width: 500px) {
+    .site-footer { padding-bottom: 20px; }
   }
   .site-footer-inner {
     max-width: 960px; margin: 0 auto;

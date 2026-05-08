@@ -68,7 +68,10 @@ export default function App() {
             <Route path="/faq"         element={<FAQ />} />
             <Route path="/blog"        element={<Blog />} />
             <Route path="/blog/:slug"  element={<BlogPost />} />
-            <Route path="/recall"      element={<Recall contestants={contestants} />} />
+            <Route path="/recall"             element={<Recall contestants={contestants} />} />
+            <Route path="/recall/archive"   element={<Recall contestants={contestants} />} />
+            <Route path="/recall/unlimited" element={<Recall contestants={contestants} />} />
+            <Route path="/recall/stats"     element={<Recall contestants={contestants} />} />
           </Routes>
         </div>
 

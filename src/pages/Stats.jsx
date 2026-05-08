@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import useSEO from "../shared/useSEO";
 import { fetchDailyStats, fetchGlobalStats } from "../shared/supabase";
 import { loadStorage, loadUnlimitedStats } from "../shared/storage";
+import { RecallStatsTab } from "../shared/recallStats";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function friendlyCount(n) {
@@ -354,12 +355,14 @@ export default function Stats() {
       </header>
 
       <div className="ul-tabs">
-        <button className={`ul-tab${activeTab==="my"?"     active":""}`} onClick={() => setActiveTab("my")}>My Stats</button>
-        <button className={`ul-tab${activeTab==="daily"?" active":""}`} onClick={() => setActiveTab("daily")}>Daily</button>
-        <button className={`ul-tab${activeTab==="global"?" active":""}`} onClick={() => setActiveTab("global")}>Global</button>
+        <button className={`ul-tab${activeTab === "my"     ? " active" : ""}`} onClick={() => setActiveTab("my")}>My Stats</button>
+        <button className={`ul-tab${activeTab === "recall" ? " active" : ""}`} onClick={() => setActiveTab("recall")}>Recall</button>
+        <button className={`ul-tab${activeTab === "daily"  ? " active" : ""}`} onClick={() => setActiveTab("daily")}>Daily</button>
+        <button className={`ul-tab${activeTab === "global" ? " active" : ""}`} onClick={() => setActiveTab("global")}>Global</button>
       </div>
 
       {activeTab === "my"     && <MyStatsTab />}
+      {activeTab === "recall" && <RecallStatsTab />}
       {activeTab === "daily"  && <DailyTab />}
       {activeTab === "global" && <GlobalTab />}
     </>
