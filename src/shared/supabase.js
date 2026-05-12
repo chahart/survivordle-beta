@@ -111,3 +111,25 @@ export async function fetchGlobalStats() {
     return await res.json();
   } catch { return null; }
 }
+
+export async function fetchRecallGlobalStats() {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/recall_events?select=score,mode`,
+      {
+        headers: {
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+      }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    if (!Array.isArray(rows) || rows.length === 0) return { total_plays: 0, avg_score: null, unlimited_plays: 0 };
+    const total_plays = rows.length;
+    const scores = rows.map(r => r.score).filter(s => s != null);
+    const avg_score = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+    const unlimited_plays = rows.filter(r => r.mode === "recall_unlimited").length;
+    return { total_plays, avg_score, unlimited_plays };
+  } catch { return null; }
+}

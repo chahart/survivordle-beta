@@ -330,6 +330,39 @@ export default function HowToPlay() {
           </div>
         </div>
 
+        {/* Recall Mode */}
+        <div className="htp-section">
+          <div className="htp-section-title">Recall Mode</div>
+          <p className="htp-body">
+            Recall is the reverse of Survivordle — you're shown a castaway's name and must recall their stats from memory.
+            Guess their Season, Placement, Age, and Tribe Color to earn a score out of 100 and a letter grade.
+            Play at <a href="/recall" style={{ color: "var(--accent, #e17055)", textDecoration: "none" }}>/recall</a>.
+          </p>
+          <div className="htp-cols" style={{ marginBottom: "12px" }}>
+            <div className="htp-col-row">
+              <span className="htp-col-name">Season</span>
+              <span className="htp-col-desc">Up to 40 pts. −4 pts for each season away from the correct answer (10+ off = 0).</span>
+            </div>
+            <div className="htp-col-row">
+              <span className="htp-col-name">Placement</span>
+              <span className="htp-col-desc">Up to 40 pts. −4 pts for each place away from the correct finish (10+ off = 0).</span>
+            </div>
+            <div className="htp-col-row">
+              <span className="htp-col-name">Age</span>
+              <span className="htp-col-desc">Up to 12 pts. Within ±3 years = 12 · ±4–5 = 8 · ±6–10 = 4 · more than 10 off = 0.</span>
+            </div>
+            <div className="htp-col-row">
+              <span className="htp-col-name">Tribe Color</span>
+              <span className="htp-col-desc">Up to 8 pts. Exact match = 8, wrong = 0. No partial credit.</span>
+            </div>
+          </div>
+          <div className="htp-tip">
+            <strong>Grading scale:</strong> A+ = 100 &nbsp;·&nbsp; A = 93–99 &nbsp;·&nbsp; A- = 90–92 &nbsp;·&nbsp; B+ = 87–89 &nbsp;·&nbsp; B = 83–86 &nbsp;·&nbsp; B- = 80–82 &nbsp;·&nbsp; C+ = 77–79 &nbsp;·&nbsp; C = 73–76 &nbsp;·&nbsp; C- = 70–72 &nbsp;·&nbsp; D+ = 67–69 &nbsp;·&nbsp; D = 63–66 &nbsp;·&nbsp; D- = 60–62 &nbsp;·&nbsp; F = below 60
+            <br /><br />
+            Recall has <strong>Daily</strong>, <strong>Archive</strong>, and <strong>Unlimited</strong> sub-modes — stats for each are tracked separately.
+          </div>
+        </div>
+
         <hr className="htp-divider" />
 
         <div className="htp-footer">

@@ -149,3 +149,31 @@ export function formatRecallKey(key) {
   const d = new Date(year, month - 1, day);
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
+
+const GPA_SCALE = {
+  "A+": 4.0, "A": 4.0, "A-": 3.66,
+  "B+": 3.33, "B": 3.0, "B-": 2.66,
+  "C+": 2.33, "C": 2.0, "C-": 1.66,
+  "D+": 1.33, "D": 1.0, "D-": 0.66,
+  "F": 0.0,
+};
+
+export function computeGPA(grades) {
+  const valid = grades.filter(g => g != null && GPA_SCALE[g] !== undefined);
+  if (!valid.length) return null;
+  const sum = valid.reduce((acc, g) => acc + GPA_SCALE[g], 0);
+  return (sum / valid.length).toFixed(1);
+}
+
+export function computeGradeDist(grades) {
+  const dist = { A: 0, B: 0, C: 0, D: 0, F: 0 };
+  for (const g of grades) {
+    if (!g) continue;
+    if (g.startsWith("A")) dist.A++;
+    else if (g.startsWith("B")) dist.B++;
+    else if (g.startsWith("C")) dist.C++;
+    else if (g.startsWith("D")) dist.D++;
+    else dist.F++;
+  }
+  return dist;
+}

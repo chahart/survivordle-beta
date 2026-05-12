@@ -1,15 +1,15 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { logRecallEvent } from "../shared/supabase";
-import { saveRecallUnlimitedGame } from "../shared/storage";
+import { logRecallEvent, fetchRecallGlobalStats } from "../shared/supabase";
+import { saveRecallUnlimitedGame, loadAllRecallDailyResults, loadRecallUnlimitedHistory } from "../shared/storage";
 import {
   scoreSeason, scorePlacement, scoreAge, scoreTribeColor, getGrade,
   buildStintMap, getEligibleContestants, pickRandom,
   getRecallDailyAnswer, getRecallAnswerForKey,
   getTodayKeyET, getPastRecallKeys, formatRecallKey, getRecallPuzzleNumber,
+  computeGPA, computeGradeDist,
 } from "../shared/recallLogic";
 import useSEO from "../shared/useSEO";
-import { RecallStatsTab } from "../shared/recallStats";
 
 // ── Tribe color dot ────────────────────────────────────────────────────────────
 const TRIBE_COLOR_MAP = {
@@ -36,12 +36,6 @@ function TribeDot({ color, size = 10 }) {
 }
 
 // ── Shared helpers ─────────────────────────────────────────────────────────────
-function scoreColor(pts, max) {
-  if (pts === max) return "correct";
-  if (pts > 0)     return "close";
-  return "wrong";
-}
-
 function gradeColor(grade) {
   if (grade === "A+" || grade === "A" || grade === "A-") return "#4aaa4a";
   if (grade === "F") return "#aa4a4a";
@@ -131,6 +125,158 @@ function useNameReveal(castaway, eligiblePool, skip) {
   return { phase, shuffleName, settling };
 }
 
+// ── Flip card result display ───────────────────────────────────────────────────
+const FLIP_RESULT_COLOR = {
+  correct: "#4aaa4a",
+  close:   "#e8742a",
+  wrong:   "#e05040",
+};
+const FLIP_RESULT_BG = {
+  correct: "rgba(74,170,74,0.12)",
+  close:   "rgba(232,116,42,0.12)",
+  wrong:   "rgba(224,80,64,0.12)",
+};
+
+function flipScoreClass(pts, max) {
+  if (pts === max) return "correct";
+  if (pts > 0)     return "close";
+  return "wrong";
+}
+
+function FlipCard({ label, guessDisplay, answerDisplay, pts, maxPts, flipped, isTribe, guessColor, answerColor }) {
+  const cls       = flipScoreClass(pts, maxPts);
+  const textColor = FLIP_RESULT_COLOR[cls];
+  const bgColor   = FLIP_RESULT_BG[cls];
+
+  return (
+    <div className="rfc-perspective">
+      <div className={`rfc-inner${flipped ? " rfc-flipped" : ""}`}>
+
+        {/* Face */}
+        <div className="rfc-face rfc-face--front">
+          <span className="rfc-label">{label}</span>
+          <span className="rfc-guess-main">
+            {isTribe && guessColor && <TribeDot color={guessColor} size={14} />}
+            {guessDisplay}
+          </span>
+        </div>
+
+        {/* Back */}
+        <div className="rfc-face rfc-face--back" style={{ background: bgColor, borderColor: textColor }}>
+          <span className="rfc-label">{label}</span>
+          <span className="rfc-back-guess">
+            {isTribe && guessColor && <TribeDot color={guessColor} size={10} />}
+            {guessDisplay}
+          </span>
+          <span className="rfc-answer" style={{ color: textColor }}>
+            {isTribe && answerColor && <TribeDot color={answerColor} size={14} />}
+            {answerDisplay}
+          </span>
+          <span className="rfc-pts" style={{ color: textColor }}>+{pts} / {maxPts}</span>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+function FlipResults({
+  skipAnimation,
+  seasonVal, placementVal, ageVal, tribeColorVal,
+  castaway,
+  seasonPts, placementPts, agePts, tribePts, total, grade,
+  onShare, copied,
+  mode, isDaily,
+}) {
+  const ALL_FLIPPED = [true, true, true, true];
+  const [flipped,      setFlipped]      = useState(skipAnimation ? ALL_FLIPPED : [false, false, false, false]);
+  const [scoreVisible, setScoreVisible] = useState(skipAnimation);
+  const timersRef = useRef([]);
+
+  useEffect(() => {
+    if (skipAnimation) return;
+
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+
+    const schedule = (fn, delay) => {
+      const id = setTimeout(fn, delay);
+      timersRef.current.push(id);
+    };
+
+    // Flip each card with 600ms stagger
+    [0, 1, 2, 3].forEach(i => {
+      schedule(() => {
+        setFlipped(prev => {
+          const next = [...prev];
+          next[i] = true;
+          return next;
+        });
+      }, i * 600);
+    });
+
+    // After last flip (1800ms) + 400ms wait → fade in score
+    schedule(() => setScoreVisible(true), 1800 + 400);
+
+    return () => { timersRef.current.forEach(clearTimeout); };
+  // Only runs once on mount — intentional
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="recall-results">
+      <div className="rfc-grid">
+        <FlipCard
+          label="Season"
+          guessDisplay={`S${seasonVal}`}
+          answerDisplay={`S${castaway.season}`}
+          pts={seasonPts} maxPts={40}
+          flipped={flipped[0]}
+        />
+        <FlipCard
+          label="Placement"
+          guessDisplay={`#${placementVal}`}
+          answerDisplay={`#${castaway.placement}`}
+          pts={placementPts} maxPts={40}
+          flipped={flipped[1]}
+        />
+        <FlipCard
+          label="Age"
+          guessDisplay={ageVal}
+          answerDisplay={String(castaway.age ?? "?")}
+          pts={agePts} maxPts={12}
+          flipped={flipped[2]}
+        />
+        <FlipCard
+          label="Tribe Color"
+          guessDisplay={tribeColorVal || "—"}
+          answerDisplay={castaway.tribe_color}
+          pts={tribePts} maxPts={8}
+          flipped={flipped[3]}
+          isTribe
+          guessColor={tribeColorVal}
+          answerColor={castaway.tribe_color}
+        />
+      </div>
+
+      <div className={`rfc-summary${scoreVisible ? " rfc-summary--visible" : ""}`}>
+        <div className="recall-score-banner">
+          <div className="recall-score-total">{total} / 100</div>
+          <div className="recall-score-grade" style={{ color: gradeColor(grade) }}>{grade}</div>
+        </div>
+        <button className="share-btn" onClick={onShare}>
+          {copied ? "✓ Copied!" : "📋 Share Result"}
+        </button>
+        {isDaily && (
+          <p style={{ textAlign: "center", color: "var(--text3)", fontSize: "13px" }}>
+            Come back tomorrow for a new castaway!
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Recall game form ───────────────────────────────────────────────────────────
 const RECALL_SHARE_EMOJI = { correct: "🟩", close: "🟨", wrong: "🟥" };
 
@@ -145,7 +291,8 @@ function RecallGame({ castaway, stintMap, tribeColors, eligiblePool, onComplete,
   const displayName  = buildDisplayName(castaway, stintLabel);
 
   // Skip animation if we're restoring a saved result (already played)
-  const { phase, shuffleName, settling } = useNameReveal(castaway, eligiblePool, !!savedResult);
+  const skipFlip = !!savedResult;
+  const { phase, shuffleName, settling } = useNameReveal(castaway, eligiblePool, skipFlip);
 
   const [submitted,     setSubmitted]     = useState(!!savedResult);
   const [seasonVal,     setSeasonVal]     = useState(savedResult ? String(savedResult.seasonVal)    : "");
@@ -283,70 +430,26 @@ function RecallGame({ castaway, stintMap, tribeColors, eligiblePool, onComplete,
       )}
 
       {!isAnimating && submitted && (
-        <div className="recall-results">
-          <div className="recall-score-banner">
-            <div className="recall-score-total">{total} / 100</div>
-            <div className="recall-score-grade" style={{ color: gradeColor(grade) }}>{grade}</div>
-          </div>
-          <div className="recall-breakdown">
-            <ResultRow label="Season"    guessDisplay={`S${seasonVal}`}    answerDisplay={`S${castaway.season}`}        pts={seasonPts}    maxPts={40} />
-            <ResultRow label="Placement" guessDisplay={`#${placementVal}`} answerDisplay={`#${castaway.placement}`}     pts={placementPts} maxPts={40} />
-            <ResultRow label="Age"       guessDisplay={ageVal}             answerDisplay={String(castaway.age ?? "?")} pts={agePts}       maxPts={12} />
-            <ResultRowTribe label="Tribe Color" guessVal={tribeColorVal} answerVal={castaway.tribe_color} pts={tribePts} maxPts={8} />
-          </div>
-          <button className="share-btn" onClick={handleShare}>
-            {copied ? "✓ Copied!" : "📋 Share Result"}
-          </button>
-        </div>
+        <FlipResults
+          skipAnimation={skipFlip}
+          seasonVal={seasonVal}
+          placementVal={placementVal}
+          ageVal={ageVal}
+          tribeColorVal={tribeColorVal}
+          castaway={castaway}
+          seasonPts={seasonPts}
+          placementPts={placementPts}
+          agePts={agePts}
+          tribePts={tribePts}
+          total={total}
+          grade={grade}
+          onShare={handleShare}
+          copied={copied}
+          mode={mode}
+          isDaily={mode === "recall_daily"}
+        />
       )}
     </>
-  );
-}
-
-// ── Result row components ──────────────────────────────────────────────────────
-function ResultRow({ label, guessDisplay, answerDisplay, pts, maxPts }) {
-  const cls = scoreColor(pts, maxPts);
-  return (
-    <div className={`recall-result-row recall-result-row--${cls}`}>
-      <div className="recall-result-label">{label}</div>
-      <div className="recall-result-guess">
-        <span className="recall-result-guess-label">Your answer</span>
-        <span className="recall-result-val">{guessDisplay}</span>
-      </div>
-      <div className="recall-result-answer">
-        <span className="recall-result-guess-label">Correct</span>
-        <span className="recall-result-val">{answerDisplay}</span>
-      </div>
-      <div className="recall-result-pts">
-        <span className="recall-result-pts-num">{pts}</span>
-        <span className="recall-result-pts-denom">/ {maxPts}</span>
-      </div>
-    </div>
-  );
-}
-
-function ResultRowTribe({ label, guessVal, answerVal, pts, maxPts }) {
-  const cls = scoreColor(pts, maxPts);
-  return (
-    <div className={`recall-result-row recall-result-row--${cls}`}>
-      <div className="recall-result-label">{label}</div>
-      <div className="recall-result-guess">
-        <span className="recall-result-guess-label">Your answer</span>
-        <span className="recall-result-val" style={{ display: "flex", alignItems: "center" }}>
-          <TribeDot color={guessVal} size={10} />{guessVal || "—"}
-        </span>
-      </div>
-      <div className="recall-result-answer">
-        <span className="recall-result-guess-label">Correct</span>
-        <span className="recall-result-val" style={{ display: "flex", alignItems: "center" }}>
-          <TribeDot color={answerVal} size={10} />{answerVal}
-        </span>
-      </div>
-      <div className="recall-result-pts">
-        <span className="recall-result-pts-num">{pts}</span>
-        <span className="recall-result-pts-denom">/ {maxPts}</span>
-      </div>
-    </div>
   );
 }
 
@@ -384,12 +487,6 @@ function RecallDaily({ contestants, stintMap, tribeColors, eligiblePool }) {
         mode="recall_daily"
         puzzleKey={todayKey}
       />
-
-      {saved && (
-        <p style={{ textAlign: "center", color: "var(--text3)", fontSize: "13px", marginTop: "20px" }}>
-          Come back tomorrow for a new castaway!
-        </p>
-      )}
     </div>
   );
 }
@@ -539,6 +636,144 @@ function RecallArchive({ contestants, stintMap, tribeColors, eligiblePool }) {
   );
 }
 
+// ── Grade color helpers ────────────────────────────────────────────────────────
+const GRADE_BAR_COLORS = {
+  A: { bg: "#1a4d1a", border: "#4aaa4a" },
+  B: { bg: "#4a2a05", border: "#f09030" },
+  C: { bg: "#1a2a4a", border: "#4a8aff" },
+  D: { bg: "#3a3a10", border: "#aaaa4a" },
+  F: { bg: "#4a1a1a", border: "#aa4a4a" },
+};
+
+function GradeDistBars({ dist }) {
+  const max = Math.max(...Object.values(dist), 1);
+  return (
+    <>
+      <div className="sp-sub-title" style={{ marginTop: "20px" }}>Grade Distribution</div>
+      {["A", "B", "C", "D", "F"].map(letter => {
+        const count = dist[letter] || 0;
+        const w = count > 0 ? `${Math.max(Math.round((count / max) * 100), 4)}%` : "0%";
+        const { bg, border } = GRADE_BAR_COLORS[letter];
+        return (
+          <div key={letter} className="stat-row">
+            <span className="stat-label">{letter}</span>
+            <div className="stat-bar-wrap">
+              <div className="stat-bar" style={{ width: w, background: bg, border: `1px solid ${border}` }}>
+                {count > 0 && <span className="stat-bar-count">{count}</span>}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+function RecallMyStats() {
+  const dailyResults  = loadAllRecallDailyResults();
+  const unlimHistory  = loadRecallUnlimitedHistory();
+
+  function StatsSection({ results, label, scoreField = "total" }) {
+    if (!results.length) {
+      return (
+        <div style={{ marginBottom: "28px" }}>
+          <div className="sp-sub-title">{label}</div>
+          <p style={{ textAlign: "center", color: "var(--text3)", fontSize: "13px", marginTop: "12px" }}>
+            No games yet
+          </p>
+        </div>
+      );
+    }
+    const grades  = results.map(r => r.grade);
+    const gpa     = computeGPA(grades);
+    const scores  = results.map(r => r[scoreField] ?? r.total ?? r.total_score ?? 0);
+    const avgPct  = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+    const best    = scores.length ? Math.max(...scores) : 0;
+    const dist    = computeGradeDist(grades);
+
+    return (
+      <div style={{ marginBottom: "32px" }}>
+        <div className="sp-sub-title">{label}</div>
+        <div className="stats-grid" style={{ marginTop: "12px", marginBottom: "12px" }}>
+          {[
+            [results.length, "Played"],
+            [`${avgPct}%`,   "Avg Score"],
+            [gpa ?? "—",     "GPA"],
+            [best,           "Best Score"],
+          ].map(([val, lbl]) => (
+            <div className="stats-grid-item" key={lbl}>
+              <span className="stats-grid-num">{val}</span>
+              <span className="stats-grid-label">{lbl}</span>
+            </div>
+          ))}
+        </div>
+        <GradeDistBars dist={dist} />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <StatsSection results={dailyResults} label="Daily" />
+      <StatsSection results={unlimHistory} label="Unlimited" scoreField="total_score" />
+    </div>
+  );
+}
+
+function RecallGlobalStats() {
+  const [data,    setData]    = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchRecallGlobalStats().then(d => { setData(d); setLoading(false); });
+  }, []);
+
+  if (loading) return <p style={{ textAlign: "center", color: "var(--text3)", marginTop: "24px" }}>Loading…</p>;
+  if (!data)   return <p style={{ textAlign: "center", color: "var(--text3)", marginTop: "24px" }}>Could not load global stats.</p>;
+
+  const { total_plays, avg_score, unlimited_plays } = data;
+  const daily_plays = total_plays - unlimited_plays;
+
+  return (
+    <div>
+      <div className="stats-grid" style={{ marginTop: "8px" }}>
+        {[
+          [total_plays,     "Total Plays"],
+          [daily_plays,     "Daily Plays"],
+          [unlimited_plays, "Unlimited Plays"],
+          [avg_score != null ? `${avg_score}%` : "—", "Avg Score"],
+        ].map(([val, lbl]) => (
+          <div className="stats-grid-item" key={lbl}>
+            <span className="stats-grid-num">{val}</span>
+            <span className="stats-grid-label">{lbl}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RecallInlineStats() {
+  const [sub, setSub] = useState("mystats");
+
+  return (
+    <div className="recall-page">
+      <div className="ul-subtabs" style={{ marginBottom: "20px", marginTop: "0" }}>
+        <button className={`ul-subtab${sub === "mystats" ? " active" : ""}`} onClick={() => setSub("mystats")}>My Stats</button>
+        <button className={`ul-subtab${sub === "daily"   ? " active" : ""}`} onClick={() => setSub("daily")}>Daily</button>
+        <button className={`ul-subtab${sub === "global"  ? " active" : ""}`} onClick={() => setSub("global")}>Global</button>
+      </div>
+      {sub === "mystats" && <RecallMyStats />}
+      {sub === "daily"   && (
+        <p style={{ textAlign: "center", color: "var(--text3)", marginTop: "24px", fontSize: "14px" }}>
+          Coming soon
+        </p>
+      )}
+      {sub === "global"  && <RecallGlobalStats />}
+    </div>
+  );
+}
+
 // ── Root Recall page ───────────────────────────────────────────────────────────
 export default function Recall({ contestants }) {
   const navigate = useNavigate();
@@ -600,7 +835,7 @@ export default function Recall({ contestants }) {
       {activeTab === "daily"     && <RecallDaily     contestants={contestants} stintMap={stintMap} tribeColors={tribeColors} eligiblePool={eligiblePool} />}
       {activeTab === "archive"   && <RecallArchive   contestants={contestants} stintMap={stintMap} tribeColors={tribeColors} eligiblePool={eligiblePool} />}
       {activeTab === "unlimited" && <RecallUnlimited stintMap={stintMap} tribeColors={tribeColors} eligiblePool={eligiblePool} />}
-      {activeTab === "stats"     && <RecallStatsTab bodyClass="recall-page" />}
+      {activeTab === "stats"     && <RecallInlineStats />}
     </>
   );
 }

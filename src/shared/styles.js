@@ -825,17 +825,86 @@ export const RECALL_CSS = `
   }
   .recall-again-btn:hover { border-color: #e8742a; color: #e8742a; }
 
+  /* ── Flip cards ────────────────────────────────────────────────── */
+  .rfc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .rfc-perspective {
+    perspective: 600px;
+  }
+
+  .rfc-inner {
+    position: relative;
+    width: 100%; height: 120px;
+    transform-style: preserve-3d;
+    transition: transform 0.45s ease;
+  }
+  .rfc-inner.rfc-flipped {
+    transform: rotateY(180deg);
+  }
+
+  .rfc-face {
+    position: absolute; inset: 0;
+    border-radius: 8px; border: 1px solid var(--border);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 6px; padding: 10px 12px;
+    background: var(--bg3);
+    overflow: hidden;
+  }
+  .rfc-face--back {
+    transform: rotateY(180deg);
+    /* background and borderColor set inline per card result */
+  }
+
+  .rfc-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text3); line-height: 1;
+  }
+  .rfc-guess-main {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(22px, 5vw, 30px); letter-spacing: 1px;
+    color: var(--text); line-height: 1;
+    display: flex; align-items: center;
+  }
+  .rfc-back-guess {
+    font-size: 11px; color: var(--text3);
+    display: flex; align-items: center; gap: 4px;
+  }
+  .rfc-answer {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(20px, 4.5vw, 28px); letter-spacing: 1px; line-height: 1;
+    display: flex; align-items: center;
+  }
+  .rfc-pts {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+  }
+
+  /* Score + share area — hidden until all cards have flipped */
+  .rfc-summary {
+    display: flex; flex-direction: column; gap: 14px;
+    opacity: 0; transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .rfc-summary--visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   @media (max-width: 500px) {
     .recall-fields { grid-template-columns: 1fr; }
-    .recall-result-row {
-      grid-template-columns: 90px 1fr 1fr auto;
-      gap: 6px; padding: 10px 10px;
-    }
-    .recall-result-label { font-size: 10px; }
-    .recall-result-val   { font-size: 12px; }
-    .recall-result-pts-num { font-size: 15px; }
     .recall-score-total { font-size: 38px; }
     .recall-score-grade { font-size: 52px; }
+    .rfc-grid { grid-template-columns: 1fr; }
+    .rfc-inner { height: 100px; }
+    .rfc-guess-main { font-size: 22px; }
+    .rfc-answer      { font-size: 20px; }
   }
 `;
 
