@@ -107,7 +107,7 @@ export function getRecallDailyAnswer(contestants) {
 }
 
 // All past date keys (from RECALL_START_KEY up to but not including today), newest first
-export const RECALL_START_KEY = "20260520";
+export const RECALL_START_KEY = "20260514";
 
 export function getRecallPuzzleNumber(key) {
   const k = key || getTodayKeyET();
