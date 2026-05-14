@@ -876,7 +876,7 @@ export const RECALL_CSS = `
   }
 
   .recall-info-score-row {
-    display: flex; justify-content: space-between; align-items: baseline;
+    display: flex; justify-content: space-between; align-items: flex-start;
     gap: 8px; font-size: 13px;
   }
 

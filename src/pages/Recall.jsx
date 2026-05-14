@@ -820,7 +820,12 @@ function RecallInfoPopover() {
             </div>
             <div className="recall-info-score-row">
               <span className="recall-info-field">Age</span>
-              <span className="recall-info-pts">12 pts if within 3 years, 8 pts if within 5 years, 4 pts if within 10 years, 0 pts otherwise</span>
+              <span className="recall-info-pts">
+                12 pts if within 3 years<br />
+                8 pts if within 5 years<br />
+                4 pts if within 10 years<br />
+                0 pts otherwise
+              </span>
             </div>
             <div className="recall-info-score-row">
               <span className="recall-info-field">Tribe Color</span>
