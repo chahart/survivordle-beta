@@ -64,6 +64,7 @@ export default function GameBoard({
   const [firstGuess,    setFirstGuess]    = useState(null);
   const [secondGuess,  setSecondGuess]   = useState(null);
   const inputRef = useRef(null);
+  const initialCount = initialGuesses?.length ?? 0;
 
   const suggestions = useMemo(() => {
     if (!debouncedQuery.trim()) return [];
@@ -124,8 +125,14 @@ export default function GameBoard({
     if (!didWin && !didFail) {
       onMidGame?.({ guesses: newGuesses, results: newResults, hintEpisode, hintNeighbors });
     }
-    if (didWin)  { setWon(true);  setGameOver(true); finish(newGuesses, newResults, true,  false); }
-    if (didFail) {                setGameOver(true); finish(newGuesses, newResults, false, false); }
+    // Delay banner until all 6 cells finish flipping (625ms stagger + 350ms flip = 975ms)
+    if (didWin || didFail) {
+      setTimeout(() => {
+        if (didWin) setWon(true);
+        setGameOver(true);
+        finish(newGuesses, newResults, didWin, false);
+      }, 2000);
+    }
   }
 
   function handleGiveUp() {
@@ -341,20 +348,31 @@ export default function GameBoard({
         {guesses.map((g, i) => (
           <div key={g.id} className="guess-row">
             <div className="guess-name">{g.name}</div>
-            {results[i].map((cell, j) => (
-              <div key={j} className={`guess-cell ${cell.status}`}>
-                <span className="cell-main">
-                  {cell.label === "Tribe Color"
-                    ? <TribeColorCell value={cell.displayMain} />
-                    : cell.displayMain}
-                </span>
-                {cell.displaySub && <span className="cell-sub">{cell.displaySub}</span>}
-                {cell.hint && <span className="cell-hint">{cell.hint}</span>}
-                {cell.hint && cell.label === "Placement" && (
-                  <span className="cell-arrow-label">{cell.hint === "↑" ? "worse" : "better"}</span>
-                )}
-              </div>
-            ))}
+            {results[i].map((cell, j) => {
+              const isRestored = i < initialCount;
+              return (
+                <div key={j} className="gb-cell-wrap">
+                  <div
+                    className={`gb-cell-inner${isRestored ? " no-anim" : ""}`}
+                    style={isRestored ? undefined : { animationDelay: `${j * 300}ms` }}
+                  >
+                    <div className="gb-cell-front" />
+                    <div className={`gb-cell-back guess-cell ${cell.status}`}>
+                      <span className="cell-main">
+                        {cell.label === "Tribe Color"
+                          ? <TribeColorCell value={cell.displayMain} />
+                          : cell.displayMain}
+                      </span>
+                      {cell.displaySub && <span className="cell-sub">{cell.displaySub}</span>}
+                      {cell.hint && <span className="cell-hint">{cell.hint}</span>}
+                      {cell.hint && cell.label === "Placement" && (
+                        <span className="cell-arrow-label">{cell.hint === "↑" ? "worse" : "better"}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ))}
         {!gameOver && Array.from({ length: remaining }).map((_, i) => (

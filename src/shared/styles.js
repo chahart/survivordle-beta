@@ -322,6 +322,31 @@ const CSS = `
     display: flex; align-items: center; min-height: 68px;
     overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
   }
+  /* Cell flip wrapper */
+  .gb-cell-wrap { perspective: 600px; min-height: 68px; }
+  .gb-cell-inner {
+    position: relative; width: 100%; height: 100%; min-height: 68px;
+    transform-style: preserve-3d;
+    animation: cellFlip 0.35s ease forwards;
+  }
+  .gb-cell-inner.no-anim { animation: none; transform: rotateY(180deg); }
+  @keyframes cellFlip {
+    0%   { transform: rotateY(0deg); }
+    100% { transform: rotateY(180deg); }
+  }
+  .gb-cell-front {
+    position: absolute; inset: 0;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .gb-cell-back {
+    position: absolute; inset: 0;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    transform: rotateY(180deg);
+    border-radius: 6px;
+  }
+
   .guess-cell {
     border-radius: 6px; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
@@ -445,6 +470,7 @@ const CSS = `
       font-size: 9px; padding: 5px 7px; min-height: 60px;
       line-height: 1.25; white-space: normal; word-break: break-word;
     }
+    .gb-cell-wrap, .gb-cell-inner { min-height: 60px; }
     .guess-cell { min-height: 60px; padding: 4px 2px; }
     .cell-main  { font-size: 8.5px; }
     .cell-sub   { font-size: 7.5px; }
