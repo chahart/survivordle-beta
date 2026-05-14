@@ -825,6 +825,74 @@ export const RECALL_CSS = `
   }
   .recall-again-btn:hover { border-color: #e8742a; color: #e8742a; }
 
+  /* ── "What is Recall?" info button + popover ───────────────────── */
+  .recall-info-wrap {
+    margin-left: auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding-bottom: 2px;
+  }
+
+  .recall-info-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--text3); font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.3px;
+    display: flex; align-items: center; gap: 5px;
+    padding: 4px 6px; border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+    white-space: nowrap;
+  }
+  .recall-info-btn:hover { color: #e8742a; background: rgba(232,116,42,0.08); }
+  .recall-info-label { font-size: 11px; }
+
+  .recall-info-popover {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 300px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    z-index: 200;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  }
+
+  .recall-info-heading {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 1px;
+    color: #e8742a; margin: 0 0 8px; line-height: 1.1;
+  }
+
+  .recall-info-body {
+    font-size: 14px; line-height: 1.65;
+    color: var(--text2); margin: 0 0 16px;
+  }
+
+  .recall-info-scoring {
+    display: flex; flex-direction: column; gap: 7px;
+    border-top: 1px solid var(--border); padding-top: 14px;
+  }
+
+  .recall-info-score-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: 8px; font-size: 13px;
+  }
+
+  .recall-info-field {
+    font-weight: 700; color: var(--text1); white-space: nowrap;
+  }
+
+  .recall-info-pts {
+    color: var(--text3); text-align: right; font-size: 12px;
+  }
+
+  @media (max-width: 500px) {
+    .recall-info-popover { width: calc(100vw - 32px); right: -6px; }
+    .recall-info-label { display: none; }
+  }
+
   /* ── Flip cards ────────────────────────────────────────────────── */
   .rfc-grid {
     display: grid;

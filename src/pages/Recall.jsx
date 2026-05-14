@@ -290,8 +290,11 @@ function RecallGame({ castaway, stintMap, tribeColors, eligiblePool, onComplete,
   const stintLabel   = stintMap[castaway.id];
   const displayName  = buildDisplayName(castaway, stintLabel);
 
-  // Skip animation if we're restoring a saved result (already played)
-  const skipFlip = !!savedResult;
+  // Capture whether a saved result existed at mount — not reactive to later prop changes.
+  // This prevents the parent's setSaved() call (which flows savedResult back in)
+  // from killing the flip animation on the same render it triggers.
+  const skipFlipRef = useRef(!!savedResult);
+  const skipFlip = skipFlipRef.current;
   const { phase, shuffleName, settling } = useNameReveal(castaway, eligiblePool, skipFlip);
 
   const [submitted,     setSubmitted]     = useState(!!savedResult);
@@ -774,6 +777,62 @@ function RecallInlineStats() {
   );
 }
 
+// ── "What is Recall?" info popover ────────────────────────────────────────────
+function RecallInfoPopover() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  return (
+    <div className="recall-info-wrap" ref={ref}>
+      <button
+        className="recall-info-btn"
+        onClick={() => setOpen(o => !o)}
+        aria-label="What is Recall?"
+        aria-expanded={open}
+      >
+        ⓘ <span className="recall-info-label">What is Recall?</span>
+      </button>
+
+      {open && (
+        <div className="recall-info-popover" role="dialog" aria-label="What is Recall?">
+          <p className="recall-info-heading">The reverse of Survivordle.</p>
+          <p className="recall-info-body">
+            You're shown a castaway's name, and have to guess their Season, Placement, Age, and Tribe Color
+            from memory. Earn up to 100 points and a letter grade from A+ down to F.
+          </p>
+          <div className="recall-info-scoring">
+            <div className="recall-info-score-row">
+              <span className="recall-info-field">Season</span>
+              <span className="recall-info-pts">40 pts, −4 per season off</span>
+            </div>
+            <div className="recall-info-score-row">
+              <span className="recall-info-field">Placement</span>
+              <span className="recall-info-pts">40 pts, −4 per place off</span>
+            </div>
+            <div className="recall-info-score-row">
+              <span className="recall-info-field">Age</span>
+              <span className="recall-info-pts">12 pts, −4 per year off</span>
+            </div>
+            <div className="recall-info-score-row">
+              <span className="recall-info-field">Tribe Color</span>
+              <span className="recall-info-pts">8 pts, exact match only</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Root Recall page ───────────────────────────────────────────────────────────
 export default function Recall({ contestants }) {
   const navigate = useNavigate();
@@ -817,7 +876,7 @@ export default function Recall({ contestants }) {
         <div className="tagline">Recall Mode &nbsp;·&nbsp; Remember the stats</div>
       </header>
 
-      <div className="ul-tabs">
+      <div className="ul-tabs" style={{ position: "relative" }}>
         <button className={`ul-tab${activeTab === "daily"     ? " active" : ""}`} onClick={() => navigate("/recall")}>
           🔥 Daily
         </button>
@@ -830,6 +889,7 @@ export default function Recall({ contestants }) {
         <button className={`ul-tab${activeTab === "stats"     ? " active" : ""}`} onClick={() => navigate("/recall/stats")}>
           📊 Stats
         </button>
+        <RecallInfoPopover />
       </div>
 
       {activeTab === "daily"     && <RecallDaily     contestants={contestants} stintMap={stintMap} tribeColors={tribeColors} eligiblePool={eligiblePool} />}
