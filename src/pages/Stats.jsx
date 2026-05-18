@@ -306,6 +306,7 @@ function GlobalTab({ data, loading }) {
           })}
         </>
       )}
+
     </div>
   );
 }
