@@ -140,9 +140,14 @@ function MyStatsTab() {
 // ── Daily Tab ──────────────────────────────────────────────────────────────────
 const DAY_LABELS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
-function DailyTab({ data, loading }) {
+function DailyTab({ data, loading, onRetry }) {
   if (loading) return <div className="loading">Loading daily stats…</div>;
-  if (!data)   return <p style={{ textAlign:"center", color:"var(--text3)", marginTop:"40px" }}>No data available.</p>;
+  if (!data)   return (
+    <div style={{ textAlign:"center", marginTop:"40px" }}>
+      <p style={{ color:"var(--text3)", marginBottom:"12px" }}>Could not load daily stats.</p>
+      <button className="ul-subtab" onClick={onRetry}>Retry</button>
+    </div>
+  );
 
   const lastSeven  = data.last_seven || [];
 
@@ -225,9 +230,14 @@ function DailyTab({ data, loading }) {
 }
 
 // ── Global Tab ─────────────────────────────────────────────────────────────────
-function GlobalTab({ data, loading }) {
+function GlobalTab({ data, loading, onRetry }) {
   if (loading) return <div className="loading">Loading global stats…</div>;
-  if (!data)   return <p style={{ textAlign:"center", color:"var(--text3)", marginTop:"40px" }}>No data available.</p>;
+  if (!data)   return (
+    <div style={{ textAlign:"center", marginTop:"40px" }}>
+      <p style={{ color:"var(--text3)", marginBottom:"12px" }}>Could not load global stats.</p>
+      <button className="ul-subtab" onClick={onRetry}>Retry</button>
+    </div>
+  );
 
   const totalGames   = Number(data.total_games   || 0);
   const totalWins    = Number(data.total_wins     || 0);
@@ -320,10 +330,16 @@ export default function Stats() {
   const [loadingGlobal, setLoadingGlobal] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  function loadDaily() {
+    setLoadingDaily(true);
     fetchDailyStats().then(d  => { setDailyData(d);  setLoadingDaily(false);  });
+  }
+  function loadGlobal() {
+    setLoadingGlobal(true);
     fetchGlobalStats().then(d => { setGlobalData(d); setLoadingGlobal(false); });
-  }, []);
+  }
+
+  useEffect(() => { loadDaily(); loadGlobal(); }, []);
 
   useSEO({
     title: "Stats — Survivordle",
@@ -359,8 +375,8 @@ export default function Stats() {
 
       {activeTab === "my"     && <MyStatsTab />}
       {activeTab === "recall" && <RecallStatsTab />}
-      {activeTab === "daily"  && <DailyTab  data={dailyData}  loading={loadingDaily}  />}
-      {activeTab === "global" && <GlobalTab data={globalData} loading={loadingGlobal} />}
+      {activeTab === "daily"  && <DailyTab  data={dailyData}  loading={loadingDaily}  onRetry={loadDaily}  />}
+      {activeTab === "global" && <GlobalTab data={globalData} loading={loadingGlobal} onRetry={loadGlobal} />}
     </>
   );
 }
