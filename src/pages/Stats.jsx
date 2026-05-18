@@ -140,14 +140,7 @@ function MyStatsTab() {
 // ── Daily Tab ──────────────────────────────────────────────────────────────────
 const DAY_LABELS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
-function DailyTab() {
-  const [data,    setData]    = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchDailyStats().then(d => { setData(d); setLoading(false); });
-  }, []);
-
+function DailyTab({ data, loading }) {
   if (loading) return <div className="loading">Loading daily stats…</div>;
   if (!data)   return <p style={{ textAlign:"center", color:"var(--text3)", marginTop:"40px" }}>No data available.</p>;
 
@@ -232,14 +225,7 @@ function DailyTab() {
 }
 
 // ── Global Tab ─────────────────────────────────────────────────────────────────
-function GlobalTab() {
-  const [data,    setData]    = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchGlobalStats().then(d => { setData(d); setLoading(false); });
-  }, []);
-
+function GlobalTab({ data, loading }) {
   if (loading) return <div className="loading">Loading global stats…</div>;
   if (!data)   return <p style={{ textAlign:"center", color:"var(--text3)", marginTop:"40px" }}>No data available.</p>;
 
@@ -326,8 +312,17 @@ function GlobalTab() {
 
 // ── Main Stats Page ────────────────────────────────────────────────────────────
 export default function Stats() {
-  const [activeTab, setActiveTab] = useState("my");
+  const [activeTab,     setActiveTab]     = useState("my");
+  const [dailyData,     setDailyData]     = useState(null);
+  const [globalData,    setGlobalData]    = useState(null);
+  const [loadingDaily,  setLoadingDaily]  = useState(true);
+  const [loadingGlobal, setLoadingGlobal] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchDailyStats().then(d  => { setDailyData(d);  setLoadingDaily(false);  });
+    fetchGlobalStats().then(d => { setGlobalData(d); setLoadingGlobal(false); });
+  }, []);
 
   useSEO({
     title: "Stats — Survivordle",
@@ -363,8 +358,8 @@ export default function Stats() {
 
       {activeTab === "my"     && <MyStatsTab />}
       {activeTab === "recall" && <RecallStatsTab />}
-      {activeTab === "daily"  && <DailyTab />}
-      {activeTab === "global" && <GlobalTab />}
+      {activeTab === "daily"  && <DailyTab  data={dailyData}  loading={loadingDaily}  />}
+      {activeTab === "global" && <GlobalTab data={globalData} loading={loadingGlobal} />}
     </>
   );
 }

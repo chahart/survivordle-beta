@@ -723,6 +723,22 @@ function RecallMyStats() {
   );
 }
 
+const RECALL_GRADE_COLORS = {
+  A: { bg: "#1a4d1a", border: "#4aaa4a" },
+  B: { bg: "#4a2a05", border: "#f09030" },
+  C: { bg: "#1a2a4a", border: "#4a8aff" },
+  D: { bg: "#3a3a10", border: "#aaaa4a" },
+  F: { bg: "#4a1a1a", border: "#aa4a4a" },
+};
+
+function friendlyK(n) {
+  const num = Number(n);
+  if (isNaN(num)) return "—";
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
+  if (num >= 1_000)     return `${Math.floor(num / 1000)}K`;
+  return num.toLocaleString();
+}
+
 function RecallGlobalStats() {
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
@@ -734,24 +750,78 @@ function RecallGlobalStats() {
   if (loading) return <p style={{ textAlign: "center", color: "var(--text3)", marginTop: "24px" }}>Loading…</p>;
   if (!data)   return <p style={{ textAlign: "center", color: "var(--text3)", marginTop: "24px" }}>Could not load global stats.</p>;
 
-  const { total_plays, avg_score, unlimited_plays } = data;
-  const daily_plays = total_plays - unlimited_plays;
+  const total_plays     = Number(data.total_plays     || 0);
+  const unlimited_plays = Number(data.unlimited_plays || 0);
+  const avg_score       = data.avg_score != null ? Math.round(Number(data.avg_score)) : null;
+  const avg_gpa         = data.avg_gpa   != null ? Number(data.avg_gpa).toFixed(2)   : null;
+  const grade_dist      = data.grade_dist || {};
+  const gradeMax        = Math.max(...Object.values(grade_dist).map(Number), 1);
+  const easiest         = data.easiest || [];
+  const hardest         = data.hardest || [];
 
   return (
     <div>
-      <div className="stats-grid" style={{ marginTop: "8px" }}>
+      <div className="stats-grid sp-4col" style={{ marginBottom: "20px" }}>
         {[
-          [total_plays,     "Total Plays"],
-          [daily_plays,     "Daily Plays"],
-          [unlimited_plays, "Unlimited Plays"],
+          [friendlyK(total_plays),                     "Total Plays"],
           [avg_score != null ? `${avg_score}%` : "—", "Avg Score"],
+          [avg_gpa   != null ? avg_gpa          : "—", "Total GPA"],
+          [friendlyK(unlimited_plays),                 "Unlimited Plays"],
         ].map(([val, lbl]) => (
           <div className="stats-grid-item" key={lbl}>
-            <span className="stats-grid-num">{val}</span>
+            <span className="stats-grid-num" style={{ fontSize: "32px" }}>{val}</span>
             <span className="stats-grid-label">{lbl}</span>
           </div>
         ))}
       </div>
+
+      {total_plays > 0 && (
+        <>
+          <div className="sp-sub-title">Grade Distribution</div>
+          {["A", "B", "C", "D", "F"].map(letter => {
+            const count = Number(grade_dist[letter] || 0);
+            const pct   = total_plays > 0 ? Math.round((count / total_plays) * 100) : 0;
+            const w     = count > 0 ? `${Math.max(Math.round((count / gradeMax) * 100), 4)}%` : "0%";
+            const { bg, border } = RECALL_GRADE_COLORS[letter];
+            return (
+              <div key={letter} className="stat-row">
+                <span className="stat-label">{letter}</span>
+                <div className="stat-bar-wrap">
+                  <div className="stat-bar" style={{ width: w, background: `linear-gradient(90deg, ${bg}, ${bg})`, border: `1px solid ${border}` }}>
+                    {count > 0 && <span className="stat-bar-count">{pct}%</span>}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      {(easiest.length > 0 || hardest.length > 0) && (
+        <>
+          <div className="stats-divider" />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div>
+              <div className="sp-sub-title" style={{ color: "#4aaa4a" }}>Easiest</div>
+              {easiest.map((row, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "5px 0", borderBottom: "1px solid var(--border)" }}>
+                  <span style={{ fontSize: "12px", color: "var(--text2)", lineHeight: 1.3, paddingRight: "8px" }}>{row.puzzle}</span>
+                  <span style={{ fontSize: "13px", fontFamily: "'Bebas Neue', sans-serif", color: "#4aaa4a", whiteSpace: "nowrap" }}>{Math.round(row.avg_score)}%</span>
+                </div>
+              ))}
+            </div>
+            <div>
+              <div className="sp-sub-title" style={{ color: "#e05040" }}>Hardest</div>
+              {hardest.map((row, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "5px 0", borderBottom: "1px solid var(--border)" }}>
+                  <span style={{ fontSize: "12px", color: "var(--text2)", lineHeight: 1.3, paddingRight: "8px" }}>{row.puzzle}</span>
+                  <span style={{ fontSize: "13px", fontFamily: "'Bebas Neue', sans-serif", color: "#e05040", whiteSpace: "nowrap" }}>{Math.round(row.avg_score)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
