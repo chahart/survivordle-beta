@@ -4,7 +4,7 @@ import { logRecallEvent, fetchRecallGlobalStats } from "../shared/supabase";
 import { saveRecallUnlimitedGame, loadAllRecallDailyResults, loadRecallUnlimitedHistory } from "../shared/storage";
 import {
   scoreSeason, scorePlacement, scoreAge, scoreTribeColor, getGrade,
-  buildStintMap, getEligibleContestants, pickRandom,
+  buildStintMap, pickRandom,
   getRecallDailyAnswer, getRecallAnswerForKey,
   getTodayKeyET, getPastRecallKeys, formatRecallKey, getRecallPuzzleNumber,
   computeGPA, computeGradeDist,
@@ -920,7 +920,6 @@ export default function Recall({ contestants }) {
   });
 
   const stintMap     = useMemo(() => buildStintMap(contestants), [contestants]);
-  const eligiblePool = useMemo(() => getEligibleContestants(contestants), [contestants]);
   const tribeColors  = useMemo(() => {
     const colors = new Set(contestants.map(c => c.tribe_color).filter(Boolean));
     return Array.from(colors).sort();
@@ -967,9 +966,9 @@ export default function Recall({ contestants }) {
         <RecallInfoPopover />
       </div>
 
-      {activeTab === "daily"     && <RecallDaily     contestants={contestants} stintMap={stintMap} tribeColors={tribeColors} eligiblePool={eligiblePool} />}
-      {activeTab === "archive"   && <RecallArchive   contestants={contestants} stintMap={stintMap} tribeColors={tribeColors} eligiblePool={eligiblePool} />}
-      {activeTab === "unlimited" && <RecallUnlimited stintMap={stintMap} tribeColors={tribeColors} eligiblePool={eligiblePool} />}
+      {activeTab === "daily"     && <RecallDaily     contestants={contestants} stintMap={stintMap} tribeColors={tribeColors} eligiblePool={contestants} />}
+      {activeTab === "archive"   && <RecallArchive   contestants={contestants} stintMap={stintMap} tribeColors={tribeColors} eligiblePool={contestants} />}
+      {activeTab === "unlimited" && <RecallUnlimited stintMap={stintMap} tribeColors={tribeColors} eligiblePool={contestants} />}
       {activeTab === "stats"     && <RecallInlineStats />}
     </>
   );
