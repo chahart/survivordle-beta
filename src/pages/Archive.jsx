@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getAnswerForPuzzle, getDateForPuzzle, getPuzzleNumber } from "../shared/gameLogic";
 import GameBoard from "../components/GameBoard";
 import useSEO from "../shared/useSEO";
@@ -6,6 +7,7 @@ import useSEO from "../shared/useSEO";
 export default function Archive({ contestants, colorblind }) {
   const [selectedPuzzle, setSelectedPuzzle] = useState(null);
   const [answer, setAnswer] = useState(null);
+  const navigate = useNavigate();
   const puzzleNum = getPuzzleNumber();
   useSEO({
     title: "Survivordle Archive — Past Daily Puzzles",
@@ -43,6 +45,8 @@ export default function Archive({ contestants, colorblind }) {
           mode="archive"
           puzzleNum={selectedPuzzle}
           contestants={contestants}
+          onNavigateStats={() => navigate("/stats")}
+          onNavigateRecall={() => navigate("/recall")}
         />
       </>
     );

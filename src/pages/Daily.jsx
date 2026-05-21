@@ -75,6 +75,7 @@ export default function Daily({ contestants, colorblind }) {
         contestants={contestants}
         onMidGame={handleMidGame}
         onNavigateStats={() => navigate("/stats")}
+        onNavigateRecall={() => navigate("/recall")}
         onComplete={handleComplete}
         colorblind={colorblind}
         initialGuesses={saved?.guessObjects   || []}

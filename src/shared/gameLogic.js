@@ -56,9 +56,20 @@ export function getPuzzleNumber() {
   return Math.floor((todayUTC - startUTC) / 86400000) + 1;
 }
 
+import puzzleHistory from "./puzzleHistory.json"
+
 export function getAnswerForPuzzle(contestants, puzzleNum) {
-  const shuffled = seededShuffle(contestants, SHUFFLE_SEED);
-  const idx = (puzzleNum - 1) % shuffled.length;
+  // Past puzzles — locked in, immune to roster changes
+  if (puzzleNum - 1 < puzzleHistory.length) {
+    const id = puzzleHistory[puzzleNum - 1];
+    return contestants.find(c => c.id === id);
+  }
+
+  // Future puzzles — shuffle only unused contestants
+  const usedSet = new Set(puzzleHistory);
+  const remaining = contestants.filter(c => !usedSet.has(c.id));
+  const shuffled = seededShuffle(remaining, SHUFFLE_SEED);
+  const idx = (puzzleNum - 1 - puzzleHistory.length) % shuffled.length;
   return shuffled[idx];
 }
 

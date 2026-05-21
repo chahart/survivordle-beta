@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import CSS, { TAB_CSS, SUBTAB_CSS, PRIVACY_CSS, STATS_PAGE_CSS, ABOUT_CSS, FOOTER_CSS, RECALL_CSS } from "./shared/styles";
 import NavBar from "./components/NavBar";
 import Footer from "./components/Footer";
@@ -15,15 +15,21 @@ import FAQ from "./pages/FAQ";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Recall from "./pages/Recall";
+import { AnnouncementModal } from "./components/Modals";
+
+const BANNER_KEY = "survivordle_announcement_may22";
+const BANNER_EXPIRY = new Date("2026-05-22T12:00:00");
 
 const PUB_ID = import.meta.env.VITE_PLAYWIRE_PUB_ID;
 const WEBSITE_ID = import.meta.env.VITE_PLAYWIRE_WEBSITE_ID;
 
 export default function App() {
-  const [contestants,  setContestants]  = useState([]);
-  const [loading,      setLoading]      = useState(true);
-  const [lightMode,    setLightMode]    = useState(false);
-  const [colorblind,   setColorblind]   = useState(false);
+  const [contestants,      setContestants]      = useState([]);
+  const [loading,          setLoading]          = useState(true);
+  const [lightMode,        setLightMode]        = useState(false);
+  const [colorblind,       setColorblind]       = useState(false);
+  const [showAnnouncement, setShowAnnouncement] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch("/contestants.json")
@@ -31,6 +37,25 @@ export default function App() {
       .then(data => { setContestants(data); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    const now = new Date();
+    if (!localStorage.getItem(BANNER_KEY) && now < BANNER_EXPIRY) {
+      const timer = setTimeout(() => setShowAnnouncement(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
+
+  function dismissAnnouncement() {
+    localStorage.setItem(BANNER_KEY, "1");
+    setShowAnnouncement(false);
+  }
+
+  function goToRecall() {
+    dismissAnnouncement();
+    navigate("/recall");
+  }
 
   if (loading) return (
     <>
@@ -76,6 +101,13 @@ export default function App() {
         </div>
 
         <Footer />
+
+        {showAnnouncement && (
+          <AnnouncementModal
+            onClose={dismissAnnouncement}
+            onPlayRecall={goToRecall}
+          />
+        )}
 
       </div>
     </>

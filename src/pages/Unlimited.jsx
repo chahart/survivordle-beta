@@ -78,6 +78,8 @@ export default function Unlimited({ contestants, colorblind }) {
             contestants={contestants}
             onComplete={handleComplete}
             colorblind={colorblind}
+            onNavigateStats={() => navigate("/stats")}
+            onNavigateRecall={() => navigate("/recall")}
           />
         </>
       )}

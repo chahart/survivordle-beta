@@ -38,6 +38,7 @@ export default function GameBoard({
   initialGaveUp,
   onShowStats,
   onNavigateStats,
+  onNavigateRecall,
   colorblind,
   onMidGame,
   initialHintEpisode,
@@ -314,17 +315,23 @@ export default function GameBoard({
           <span className="status-name">{answer.name}</span>
           <span className="status-sub">{answer.seasonNameFull} · {answer.result}</span>
           <br />
-          {!gaveUp && (
-            <button className="share-btn" onClick={handleShare}>
-              {copied ? "✓ Copied!" : "📋 Share Result"}
-            </button>
-          )}
-          {mode === "daily" && onNavigateStats && (
-            <button className="share-btn" style={{ marginLeft: "8px" }} onClick={onNavigateStats}>
-              📊 Full Site Stats
-            </button>
-          )}
-          <br />
+          <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "10px", flexWrap: "wrap" }}>
+            {!gaveUp && (
+              <button className="share-btn" onClick={handleShare}>
+                {copied ? "✓ Copied!" : "📋 Share"}
+              </button>
+            )}
+            {onNavigateStats && (
+              <button className="share-btn" onClick={onNavigateStats}>
+                📊 Stats
+              </button>
+            )}
+            {onNavigateRecall && (
+              <button className="share-btn" onClick={onNavigateRecall}>
+                🔥 Recall
+              </button>
+            )}
+          </div>
           <br />
           <a href="https://x.com/Survivordle" target="_blank" rel="noopener noreferrer" className="about-link">
             Follow us on 𝕏 @Survivordle

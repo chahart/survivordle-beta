@@ -1,5 +1,30 @@
 import { loadStorage } from "../shared/storage";
 
+export function AnnouncementModal({ onClose, onPlayRecall }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>✕</button>
+        <h2 className="modal-title">What's New</h2>
+
+        <div className="modal-section-title">Season 50 Added</div>
+        <p className="modal-body">
+          Survivordle is fully updated with Season 50! Test your knowledge in Daily, Archive, and Unlimited modes.
+        </p>
+
+        <div className="modal-section-title">Introducing... Recall Mode!</div>
+        <p className="modal-body">
+          Recall flips the game: you're given a castaway's stats and must guess their name. A new way to challenge your Survivor knowledge, with an unlimited mode as well.
+        </p>
+
+        <button className="play-recall-btn" onClick={onPlayRecall}>
+          Play Recall →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function HowToPlayModal({ onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>

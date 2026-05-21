@@ -376,6 +376,14 @@ const CSS = `
     font-size: 13px; padding: 8px 20px; transition: all 0.2s;
   }
   .share-btn:hover { border-color: #e8742a; color: var(--text); }
+  .play-recall-btn {
+    display: block; width: 100%; margin-top: 20px; padding: 12px 20px;
+    background: #e8742a; border: none; border-radius: 8px;
+    color: #fff; font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: 2px; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .play-recall-btn:hover { background: #d0601a; }
 
   /* ── Modal ── */
   .modal-overlay {
