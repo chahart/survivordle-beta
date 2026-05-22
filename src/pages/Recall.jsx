@@ -186,7 +186,7 @@ function FlipResults({
   castaway,
   seasonPts, placementPts, agePts, tribePts, total, grade,
   onShare, copied,
-  mode, isDaily,
+  mode, isDaily, onNavigateStats,
 }) {
   const ALL_FLIPPED = [true, true, true, true];
   const [flipped,      setFlipped]      = useState(skipAnimation ? ALL_FLIPPED : [false, false, false, false]);
@@ -264,9 +264,16 @@ function FlipResults({
           <div className="recall-score-total">{total} / 100</div>
           <div className="recall-score-grade" style={{ color: gradeColor(grade) }}>{grade}</div>
         </div>
-        <button className="share-btn" onClick={onShare}>
-          {copied ? "✓ Copied!" : "📋 Share Result"}
-        </button>
+        <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
+          <button className="share-btn" onClick={onShare}>
+            {copied ? "✓ Copied!" : "📋 Share Result"}
+          </button>
+          {onNavigateStats && (
+            <button className="share-btn" onClick={onNavigateStats}>
+              📊 Recall Stats
+            </button>
+          )}
+        </div>
         {isDaily && (
           <p style={{ textAlign: "center", color: "var(--text3)", fontSize: "13px" }}>
             Come back tomorrow for a new castaway!
@@ -286,7 +293,7 @@ function recallShareEmoji(pts, max) {
   return RECALL_SHARE_EMOJI.wrong;
 }
 
-function RecallGame({ castaway, stintMap, tribeColors, eligiblePool, onComplete, savedResult, mode, puzzleKey }) {
+function RecallGame({ castaway, stintMap, tribeColors, eligiblePool, onComplete, savedResult, mode, puzzleKey, onNavigateStats }) {
   const stintLabel   = stintMap[castaway.id];
   const displayName  = buildDisplayName(castaway, stintLabel);
 
@@ -450,6 +457,7 @@ function RecallGame({ castaway, stintMap, tribeColors, eligiblePool, onComplete,
           copied={copied}
           mode={mode}
           isDaily={mode === "recall_daily"}
+          onNavigateStats={onNavigateStats}
         />
       )}
     </>
@@ -457,7 +465,7 @@ function RecallGame({ castaway, stintMap, tribeColors, eligiblePool, onComplete,
 }
 
 // ── Daily mode ─────────────────────────────────────────────────────────────────
-function RecallDaily({ contestants, stintMap, tribeColors, eligiblePool }) {
+function RecallDaily({ contestants, stintMap, tribeColors, eligiblePool, onNavigateStats }) {
   const todayKey = getTodayKeyET();
   const castaway = useMemo(() => getRecallDailyAnswer(contestants), [contestants]);
   const savedKey = `recall_daily_${todayKey}`;
@@ -489,13 +497,14 @@ function RecallDaily({ contestants, stintMap, tribeColors, eligiblePool }) {
         savedResult={saved}
         mode="recall_daily"
         puzzleKey={todayKey}
+        onNavigateStats={onNavigateStats}
       />
     </div>
   );
 }
 
 // ── Unlimited mode ─────────────────────────────────────────────────────────────
-function RecallUnlimited({ stintMap, tribeColors, eligiblePool }) {
+function RecallUnlimited({ stintMap, tribeColors, eligiblePool, onNavigateStats }) {
   const [seenIds,  setSeenIds]  = useState(() => new Set());
   const [castaway, setCastaway] = useState(() => pickRandom(eligiblePool, new Set()));
   const [gameKey,  setGameKey]  = useState(0);
@@ -549,13 +558,14 @@ function RecallUnlimited({ stintMap, tribeColors, eligiblePool }) {
         savedResult={null}
         mode="recall_unlimited"
         puzzleKey={null}
+        onNavigateStats={onNavigateStats}
       />
     </div>
   );
 }
 
 // ── Archive mode ───────────────────────────────────────────────────────────────
-function RecallArchive({ contestants, stintMap, tribeColors, eligiblePool }) {
+function RecallArchive({ contestants, stintMap, tribeColors, eligiblePool, onNavigateStats }) {
   const pastKeys = useMemo(() => getPastRecallKeys(), []);
   const [selectedKey, setSelectedKey] = useState(null);
   const [saved,       setSaved]       = useState(null);
@@ -599,6 +609,7 @@ function RecallArchive({ contestants, stintMap, tribeColors, eligiblePool }) {
           savedResult={saved}
           mode="recall_archive"
           puzzleKey={selectedKey}
+          onNavigateStats={onNavigateStats}
         />
       </div>
     );
@@ -966,9 +977,9 @@ export default function Recall({ contestants }) {
         <RecallInfoPopover />
       </div>
 
-      {activeTab === "daily"     && <RecallDaily     contestants={contestants} stintMap={stintMap} tribeColors={tribeColors} eligiblePool={contestants} />}
-      {activeTab === "archive"   && <RecallArchive   contestants={contestants} stintMap={stintMap} tribeColors={tribeColors} eligiblePool={contestants} />}
-      {activeTab === "unlimited" && <RecallUnlimited stintMap={stintMap} tribeColors={tribeColors} eligiblePool={contestants} />}
+      {activeTab === "daily"     && <RecallDaily     contestants={contestants} stintMap={stintMap} tribeColors={tribeColors} eligiblePool={contestants} onNavigateStats={() => navigate("/recall/stats")} />}
+      {activeTab === "archive"   && <RecallArchive   contestants={contestants} stintMap={stintMap} tribeColors={tribeColors} eligiblePool={contestants} onNavigateStats={() => navigate("/recall/stats")} />}
+      {activeTab === "unlimited" && <RecallUnlimited stintMap={stintMap} tribeColors={tribeColors} eligiblePool={contestants} onNavigateStats={() => navigate("/recall/stats")} />}
       {activeTab === "stats"     && <RecallInlineStats />}
     </>
   );
