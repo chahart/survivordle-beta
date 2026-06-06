@@ -114,6 +114,22 @@ export async function fetchGlobalStats() {
   } catch { return null; }
 }
 
+export async function fetchRecallDailyStats(puzzleNames) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_recall_daily_stats`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ puzzle_names: puzzleNames }),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
 export async function fetchRecallGlobalStats() {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_recall_global_stats`, {

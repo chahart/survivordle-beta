@@ -1,13 +1,13 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { logRecallEvent, fetchRecallGlobalStats } from "../shared/supabase";
+import { logRecallEvent, fetchRecallGlobalStats, fetchRecallDailyStats } from "../shared/supabase";
 import { saveRecallUnlimitedGame, loadAllRecallDailyResults, loadRecallUnlimitedHistory } from "../shared/storage";
 import {
   scoreSeason, scorePlacement, scoreAge, scoreTribeColor, getGrade,
   buildStintMap, pickRandom,
   getRecallDailyAnswer, getRecallAnswerForKey,
   getTodayKeyET, getPastRecallKeys, formatRecallKey, getRecallPuzzleNumber,
-  computeGPA, computeGradeDist,
+  computeGPA, computeGradeDist, RECALL_SCHEDULE, RECALL_START_KEY,
 } from "../shared/recallLogic";
 import useSEO from "../shared/useSEO";
 
@@ -837,7 +837,97 @@ function RecallGlobalStats() {
   );
 }
 
-function RecallInlineStats() {
+function RecallDailyStats({ contestants }) {
+  const [data,    setData]    = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const last7Puzzles = useMemo(() => {
+    if (!contestants.length) return [];
+    const contMap = {};
+    for (const c of contestants) contMap[c.id] = c;
+    const todayNum = getRecallPuzzleNumber(getTodayKeyET());
+    const results = [];
+    for (let i = todayNum; i >= 1 && results.length < 7; i--) {
+      const id = RECALL_SCHEDULE[i - 1];
+      const c = contMap[id];
+      if (c) results.push(`${c.name} - ${c.seasonNameFull}`);
+    }
+    return results;
+  }, [contestants]);
+
+  useEffect(() => {
+    if (!last7Puzzles.length) return;
+    fetchRecallDailyStats(last7Puzzles).then(d => { setData(d); setLoading(false); });
+  }, [last7Puzzles]);
+
+  const dailyResults = loadAllRecallDailyResults();
+  const myScoreMap = {};
+  for (const r of dailyResults) {
+    if (r.puzzle) myScoreMap[r.puzzle] = r.total;
+  }
+
+  if (loading) return <p style={{ textAlign: "center", color: "var(--text3)", marginTop: "24px" }}>Loading…</p>;
+  if (!data || !data.length) return <p style={{ textAlign: "center", color: "var(--text3)", marginTop: "24px" }}>No daily data yet.</p>;
+
+  // Sort by schedule order, most recent first
+  const puzzleOrder = Object.fromEntries(last7Puzzles.map((p, i) => [p, i]));
+  const sorted = [...data].sort((a, b) => (puzzleOrder[a.puzzle] ?? 99) - (puzzleOrder[b.puzzle] ?? 99));
+  const maxScore = Math.max(...sorted.map(d => d.avg_score), 1);
+
+  const GRADE_COLORS = {
+    "A+": "#4aaa4a", A: "#4aaa4a", "A-": "#4aaa4a",
+    "B+": "#f09030", B: "#f09030", "B-": "#f09030",
+    "C+": "#4a8aff", C: "#4a8aff", "C-": "#4a8aff",
+    "D+": "#aaaa4a", D: "#aaaa4a", "D-": "#aaaa4a",
+    F: "#aa4a4a",
+  };
+
+  return (
+    <div>
+      <div className="sp-sub-title" style={{ marginBottom: "16px" }}>Last 7 Daily Puzzles</div>
+      {sorted.map((row, i) => {
+        const grade     = getGrade(row.avg_score);
+        const gradeColor = GRADE_COLORS[grade] || "#888";
+        const barW      = `${Math.max(Math.round((row.avg_score / maxScore) * 100), 4)}%`;
+        const myScore   = myScoreMap[row.puzzle];
+        const myGrade   = myScore != null ? getGrade(myScore) : null;
+        const castawayName = row.puzzle.includes(" - ") ? row.puzzle.split(" - ")[0] : row.puzzle;
+
+        return (
+          <div key={i} style={{ marginBottom: "18px" }}>
+            <div style={{ marginBottom: "5px" }}>
+              <span style={{ fontSize: "13px", color: "var(--text1)", fontWeight: 600 }}>{castawayName}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ flex: 1, background: "var(--border)", borderRadius: "4px", height: "28px", position: "relative", overflow: "hidden" }}>
+                <div style={{
+                  width: barW, height: "100%", borderRadius: "4px",
+                  background: `linear-gradient(90deg, ${gradeColor}33, ${gradeColor}66)`,
+                  border: `1px solid ${gradeColor}`,
+                  display: "flex", alignItems: "center", paddingLeft: "8px", gap: "6px",
+                  boxSizing: "border-box",
+                }}>
+                  <span style={{ fontSize: "13px", fontFamily: "'Bebas Neue', sans-serif", color: gradeColor, whiteSpace: "nowrap" }}>
+                    {row.avg_score}% · {grade}
+                  </span>
+                </div>
+              </div>
+              {myScore != null ? (
+                <span style={{ fontSize: "12px", color: "var(--text2)", whiteSpace: "nowrap", minWidth: "60px", textAlign: "right" }}>
+                  You: <span style={{ color: GRADE_COLORS[myGrade] || "#888", fontWeight: 600 }}>{myScore}% {myGrade}</span>
+                </span>
+              ) : (
+                <span style={{ fontSize: "12px", color: "var(--text3)", whiteSpace: "nowrap", minWidth: "60px", textAlign: "right" }}>Not played</span>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function RecallInlineStats({ contestants }) {
   const [sub, setSub] = useState("mystats");
 
   return (
@@ -848,11 +938,7 @@ function RecallInlineStats() {
         <button className={`ul-subtab${sub === "global"  ? " active" : ""}`} onClick={() => setSub("global")}>Global</button>
       </div>
       {sub === "mystats" && <RecallMyStats />}
-      {sub === "daily"   && (
-        <p style={{ textAlign: "center", color: "var(--text3)", marginTop: "24px", fontSize: "14px" }}>
-          Coming soon
-        </p>
-      )}
+      {sub === "daily"   && <RecallDailyStats contestants={contestants} />}
       {sub === "global"  && <RecallGlobalStats />}
     </div>
   );
@@ -980,7 +1066,7 @@ export default function Recall({ contestants }) {
       {activeTab === "daily"     && <RecallDaily     contestants={contestants} stintMap={stintMap} tribeColors={tribeColors} eligiblePool={contestants} onNavigateStats={() => navigate("/recall/stats")} />}
       {activeTab === "archive"   && <RecallArchive   contestants={contestants} stintMap={stintMap} tribeColors={tribeColors} eligiblePool={contestants} onNavigateStats={() => navigate("/recall/stats")} />}
       {activeTab === "unlimited" && <RecallUnlimited stintMap={stintMap} tribeColors={tribeColors} eligiblePool={contestants} onNavigateStats={() => navigate("/recall/stats")} />}
-      {activeTab === "stats"     && <RecallInlineStats />}
+      {activeTab === "stats"     && <RecallInlineStats contestants={contestants} />}
     </>
   );
 }

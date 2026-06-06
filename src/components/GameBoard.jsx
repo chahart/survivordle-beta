@@ -75,6 +75,13 @@ export default function GameBoard({
         (c.nameNorm || normalize(c.name)).includes(q) ||
         (c.showNameNorm || normalize(c.showName)).includes(q)
       )
+      .sort((a, b) => {
+        const aShow = normalize(a.showName).startsWith(q);
+        const bShow = normalize(b.showName).startsWith(q);
+        if (aShow && !bShow) return -1;
+        if (!aShow && bShow) return 1;
+        return 0;
+      })
       .slice(0, 10);
   }, [debouncedQuery, contestants]);
 
